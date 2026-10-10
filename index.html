@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReconAuditor v6.0 | Advanced Cyber Recon & Threat Telemetry Suite</title>
+
+    <link rel="icon" type="image/png" href="./logo-main.png">
+    <meta name="description"
+        content="Enterprise Multi-Threaded Reconnaissance Engine, Origin Triangulation & Vulnerability Auditor engineered by Ziad A. at Fekra Tech Academy.">
+
+    <!-- Tailwind CSS & FontAwesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            void: '#02040a',
+                            panel: '#070d1e',
+                            card: '#0a1329',
+                            border: '#152342',
+                            cyan: '#00f2fe',
+                            emerald: '#00ff88',
+                            amber: '#ffb703',
+                            crimson: '#ff0055',
+                            violet: '#7928ca'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['Fira Code', 'JetBrains Mono', 'Consolas', 'monospace'],
+                        display: ['Orbitron', 'sans-serif'],
+                        sans: ['Inter', 'Cairo', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@600;800;900&family=Cairo:wght@400;600;700;900&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* Radar sweep animation */
+        @keyframes radarRotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .radar-beam {
+            animation: radarRotate 4s linear infinite;
+            transform-origin: center;
+        }
+
+        /* Grid Scanlines */
+        .crt-grid::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(0, 242, 254, 0.02), rgba(0, 0, 0, 0.01), rgba(0, 255, 136, 0.02));
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+            z-index: 99;
+            opacity: 0.7;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #00f2fe;
+        }
+
+        .glow-cyan-box {
+            box-shadow: 0 0 35px -5px rgba(0, 242, 254, 0.25);
+        }
+
+        .pulse-glow {
+            box-shadow: 0 0 20px 2px rgba(0, 255, 136, 0.4);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-cyber-void text-slate-200 font-sans min-h-screen selection:bg-cyan-400 selection:text-black antialiased relative">
+
+    <!-- Ambient Backdrop Glows -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-40 -left-40 w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[140px]"></div>
+        <div class="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px]"></div>
+        <div class="absolute -bottom-40 left-1/3 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[140px]"></div>
+    </div>
+
+    <!-- Global Header Navigation -->
+    <nav class="sticky top-0 z-50 bg-cyber-void/85 backdrop-blur-md border-b border-cyber-border/80 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="https://fekra-tech-acad.vercel.app/portfolio.html" class="flex items-center gap-2.5 group">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 group-hover:border-cyan-300 transition-all shadow-lg shadow-cyan-500/10">
+                        <i class="fa-solid fa-radar text-lg"></i>
+                    </div>
+                    <div>
+                        <span
+                            class="font-display font-black text-sm sm:text-base tracking-wider text-white uppercase block leading-none">
+                            RECON<span class="text-cyan-400">AUDITOR</span> <span
+                                class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono">v6.0</span>
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-mono tracking-tight">DEFENSIVE CYBER AUDIT &amp;
+                            TELEMETRY MATRIX</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Sound Toggle -->
+                <button id="audioMuteBtn" onclick="toggleMute()"
+                    class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900/60 text-slate-400 hover:text-cyan-400 transition flex items-center gap-1.5 font-mono">
+                    <i id="muteIcon" class="fa-solid fa-volume-high text-emerald-400"></i>
+                    <span id="muteLabel" class="hidden sm:inline">AUDIO ON</span>
+                </button>
+
+                <!-- CRT Scanline Toggle -->
+                <button id="crtToggleBtn" onclick="toggleCRT()"
+                    class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900/60 text-slate-400 hover:text-cyan-400 transition flex items-center gap-1.5 font-mono">
+                    <i class="fa-solid fa-tv"></i> <span class="hidden sm:inline">CRT SCAN</span>
+                </button>
+
+                <!-- Language Switcher -->
+                <button onclick="toggleLang()"
+                    class="text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/50 text-cyan-300 hover:bg-cyan-900/60 transition flex items-center gap-1.5 font-mono">
+                    <i class="fa-solid fa-globe"></i> <span id="langText">عربي</span>
+                </button>
+
+                <a href="https://fekra-tech-acad.vercel.app/portfolio.html"
+                    class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i> <span data-i18n="backBtn">Academy
+                        Portfolio</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero & Operational Status -->
+    <header class="relative z-10 pt-10 pb-8 px-4 border-b border-cyber-border/40">
+        <div class="max-w-6xl mx-auto text-center space-y-4">
+            <div
+                class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 text-xs font-mono tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span data-i18n="heroBadge">Phase 3 Cybersecurity Capstone • Automated Perimeter Auditor</span>
+            </div>
+
+            <h1
+                class="text-3xl sm:text-5xl lg:text-6xl font-black font-display text-white tracking-tight leading-tight uppercase">
+                Network Reconnaissance <br class="hidden sm:inline">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-emerald-400">
+                    &amp; Threat Origin Matrix
+                </span>
+            </h1>
+
+            <p class="text-xs sm:text-base text-slate-400 max-w-3xl mx-auto leading-relaxed font-sans"
+                data-i18n="heroDesc">
+                A multi-threaded Python defensive intelligence suite. Engineered with 150-socket parallel thread pools,
+                geographic origin mapping, passive ICMP TTL OS fingerprinting, Windows Server IIS deduction, and CVSS
+                threat exposure grading.
+            </p>
+
+            <!-- Student & Mentor Credential Badges -->
+            <div class="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs font-mono">
+                <div class="bg-cyber-card px-3.5 py-1.5 rounded-xl border border-cyber-border flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-cyan-400"></i>
+                    <span>Author: <strong class="text-white">Ziad A.</strong> (Age 17 • Phase 3)</span>
+                </div>
+                <div class="bg-cyber-card px-3.5 py-1.5 rounded-xl border border-cyber-border flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-emerald-400"></i>
+                    <span>Academy: <strong class="text-white">Fekra Tech</strong></span>
+                </div>
+                <div class="bg-cyber-card px-3.5 py-1.5 rounded-xl border border-cyber-border flex items-center gap-2">
+                    <i class="fa-brands fa-github text-slate-300"></i>
+                    <a href="https://github.com/SD3bes/python-grading-engine" target="_blank"
+                        class="text-cyan-400 hover:underline">Repository Source</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Showcase Container -->
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-14 relative z-10">
+
+        <!-- Interactive SOC Terminal & Geolocation Triangulation Workspace -->
+        <section id="simulator" class="space-y-6">
+
+            <!-- Preset Target Switcher -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <span class="text-xs font-mono text-cyan-400 uppercase tracking-widest block" data-i18n="simTag">//
+                        SOC TELEMETRY &amp; RECON WORKBENCH</span>
+                    <h2 class="text-2xl sm:text-3xl font-display font-black text-white" data-i18n="simTitle">Live
+                        Perimeter Audit Environment</h2>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-mono text-slate-400" data-i18n="presetLabel">Select Infrastructure
+                        Target:</span>
+                    <button onclick="selectPreset('corp')" id="presetCorp"
+                        class="text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-cyan-500/60 bg-cyan-950/60 text-cyan-300">corp.gateway.internal
+                        (Egypt)</button>
+                    <button onclick="selectPreset('cloud')" id="presetCloud"
+                        class="text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-400 hover:text-white">api.cloud-linux.app
+                        (US)</button>
+                    <button onclick="selectPreset('legacy')" id="presetLegacy"
+                        class="text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-400 hover:text-white">vault.legacy-bank.corp
+                        (UK)</button>
+                </div>
+            </div>
+
+            <!-- Live Telemetry Cockpit (Top Overview Strip) -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+                <!-- Telemetry: Geolocation Origin -->
+                <div
+                    class="bg-cyber-card p-4 rounded-2xl border border-cyber-border flex items-center gap-3.5 shadow-lg">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-cyan-950/60 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg">
+                        <i class="fa-solid fa-earth-americas"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block"
+                            data-i18n="cardOrigin">Origin Country</span>
+                        <span id="metricOriginVal"
+                            class="text-sm sm:text-base font-bold text-white truncate block">Egypt [EG]</span>
+                        <span id="metricOrgVal" class="text-[10px] text-emerald-400 font-mono truncate block">Telecom
+                            Egypt Enterprise</span>
+                    </div>
+                </div>
+
+                <!-- Telemetry: OS & Stack Fingerprint -->
+                <div
+                    class="bg-cyber-card p-4 rounded-2xl border border-cyber-border flex items-center gap-3.5 shadow-lg">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-indigo-950/60 border border-indigo-500/40 flex items-center justify-center text-indigo-400 text-lg">
+                        <i class="fa-brands fa-windows"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block"
+                            data-i18n="cardOs">Detected Platform</span>
+                        <span id="metricOsVal" class="text-sm sm:text-base font-bold text-white truncate block">Win
+                            Server 2022</span>
+                        <span class="text-[10px] text-slate-400 font-mono truncate block">ICMP TTL=128 • IIS 10.0</span>
+                    </div>
+                </div>
+
+                <!-- Telemetry: Threat Exposure Grade -->
+                <div
+                    class="bg-cyber-card p-4 rounded-2xl border border-cyber-border flex items-center gap-3.5 shadow-lg">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-amber-950/60 border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg">
+                        <i class="fa-solid fa-biohazard"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block"
+                            data-i18n="cardRisk">Threat Exposure</span>
+                        <span id="metricRiskVal"
+                            class="text-sm sm:text-base font-bold text-amber-400 truncate block">52.8 / 100</span>
+                        <span id="metricGradeVal" class="text-[10px] text-amber-300 font-mono truncate block">Grade: C
+                            (Moderate)</span>
+                    </div>
+                </div>
+
+                <!-- Telemetry: Concurrency & Performance -->
+                <div
+                    class="bg-cyber-card p-4 rounded-2xl border border-cyber-border flex items-center gap-3.5 shadow-lg">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-lg">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block"
+                            data-i18n="cardSpeed">Socket Concurrency</span>
+                        <span id="metricTimeVal"
+                            class="text-sm sm:text-base font-bold text-emerald-400 truncate block">0.84s Sweep</span>
+                        <span class="text-[10px] text-slate-400 font-mono truncate block">150 Parallel Threads</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Main Workbench: Dual-Pane Interface (Terminal + Visual Threat Radar) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left Pane: Live Terminal Feed (8 Columns) -->
+                <div
+                    class="lg:col-span-8 bg-cyber-card rounded-2xl border border-cyber-border overflow-hidden glow-cyan-box shadow-2xl flex flex-col justify-between">
+                    <!-- Header Bar -->
+                    <div
+                        class="bg-slate-900/95 border-b border-cyber-border px-4 py-3 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+                            <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                            <span class="ml-2 text-xs font-mono text-slate-400">recon-auditor.exe --target <span
+                                    id="termTargetLabel"
+                                    class="text-cyan-400 font-bold">corp.gateway.internal</span></span>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs font-mono">
+                            <span id="scanStatusIndicator" class="text-slate-400 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> READY
+                            </span>
+                            <button onclick="clearTerminal()" class="text-slate-400 hover:text-white transition"
+                                title="Clear Buffer">
+                                <i class="fa-solid fa-broom"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Terminal Output Area -->
+                    <div id="terminalScreen"
+                        class="bg-[#030611] p-5 font-mono text-xs sm:text-[13px] leading-relaxed text-slate-300 h-96 sm:h-[440px] overflow-y-auto custom-scroll space-y-1.5">
+                        <pre class="text-cyan-400 leading-none select-none font-bold text-[9px] sm:text-xs">
+ ██████╗ ███████╗ ██████╗ ██████╗ ███╗   ██╗    ███████╗ ██████╗ █████╗ ███╗   ██╗
+ ██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║    ██╔════╝██╔════╝██╔══██╗████╗  ██║
+ ██████╔╝█████╗  ██║     ██║   ██║██╔██╗ ██║    ███████╗██║     ███████║██╔██╗ ██║
+ ██╔══██╗██╔══╝  ██║     ██║   ██║██║╚██╗██║    ╚════██║██║     ██╔══██║██║╚██╗██║
+ ██║  ██║███████╗╚██████╗╚██████╔╝██║ ╚████║    ███████║╚██████╗██║  ██║██║ ╚████║
+ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝    ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝
+ [ Reconnaissance | Geolocation Origin | ThreadPool Concurrency | CVSS Scoring v6.0 ]
+            </pre>
+                        <div class="text-slate-500 pt-1">// Ready for socket audit. Select a preset or type a domain,
+                            then click 'RUN FULL RECON'.</div>
+                    </div>
+
+                    <!-- Command Controls -->
+                    <div
+                        class="bg-slate-950 p-3.5 border-t border-cyber-border flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <span class="text-cyan-400 font-mono font-bold">$</span>
+                            <input type="text" id="customTargetInput" value="corp.gateway.internal"
+                                placeholder="Enter IP or hostname..."
+                                class="bg-slate-900 border border-slate-700 focus:border-cyan-400 px-3 py-1.5 rounded-lg text-xs font-mono text-white w-full sm:w-64 focus:outline-none">
+                        </div>
+
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <button id="startScanBtn" onclick="executeScan()"
+                                class="w-full sm:w-auto px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-display font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20">
+                                <i class="fa-solid fa-play"></i> <span data-i18n="runBtn">Run Full Recon</span>
+                            </button>
+                            <button onclick="downloadReport()" id="exportReportBtn"
+                                class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="exportBtn">Export
+                                    HTML</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Pane: Real-Time Threat Radar & Packet Inspector (4 Columns) -->
+                <div class="lg:col-span-4 space-y-6 flex flex-col justify-between">
+
+                    <!-- Radar Visualizer Card -->
+                    <div
+                        class="bg-cyber-card p-5 rounded-2xl border border-cyber-border relative overflow-hidden flex flex-col items-center justify-center text-center">
+                        <div class="w-full flex items-center justify-between mb-3 text-xs font-mono text-slate-400">
+                            <span class="flex items-center gap-1.5 text-cyan-400 font-bold">
+                                <i class="fa-solid fa-satellite-dish"></i> RADAR TELEMETRY
+                            </span>
+                            <span id="radarCoord" class="text-[10px]">30.0444° N, 31.2357° E</span>
+                        </div>
+
+                        <!-- Radar Display Circle -->
+                        <div
+                            class="relative w-48 h-48 rounded-full border-2 border-cyan-500/40 bg-slate-950 flex items-center justify-center overflow-hidden my-2">
+                            <div class="absolute inset-0 rounded-full border border-cyan-500/20 m-4"></div>
+                            <div class="absolute inset-0 rounded-full border border-cyan-500/10 m-12"></div>
+                            <div class="absolute inset-x-0 top-1/2 h-px bg-cyan-500/20"></div>
+                            <div class="absolute inset-y-0 left-1/2 w-px bg-cyan-500/20"></div>
+
+                            <!-- Radar Beam -->
+                            <div
+                                class="absolute inset-0 radar-beam bg-gradient-to-tr from-cyan-500/40 via-transparent to-transparent">
+                            </div>
+
+                            <!-- Blips -->
+                            <div id="radarBlip"
+                                class="absolute w-3 h-3 rounded-full bg-emerald-400 animate-ping top-16 left-28"></div>
+                            <div class="w-2 h-2 rounded-full bg-cyan-400 relative z-10"></div>
+                        </div>
+
+                        <!-- Origin Telemetry Summary -->
+                        <div
+                            class="w-full mt-3 bg-slate-950/80 p-3 rounded-xl border border-cyber-border/80 text-left font-mono text-[11px] space-y-1">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Host ASN:</span>
+                                <span id="sideAsnVal" class="text-white font-bold">AS8452 TE-AS</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">ISP Provider:</span>
+                                <span id="sideIspVal" class="text-cyan-300">Telecom Egypt</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Packet RTT:</span>
+                                <span id="sideRttVal" class="text-emerald-400 font-bold">14 ms (Regional LAN)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Raw TCP Packet Dissection Stream -->
+                    <div
+                        class="bg-cyber-card p-5 rounded-2xl border border-cyber-border font-mono text-xs flex-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between text-slate-400 text-[11px] mb-2.5">
+                                <span class="text-cyan-400 font-bold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-network-wired"></i> SOCKET PACKET INSPECTOR
+                                </span>
+                                <span class="text-[10px] text-emerald-400">SYN/ACK DECODE</span>
+                            </div>
+
+                            <div id="packetStreamBox"
+                                class="bg-[#030611] p-3 rounded-xl border border-slate-800 text-[11px] space-y-1.5 h-44 overflow-y-auto custom-scroll text-slate-300">
+                                <div class="text-slate-500">// Ready to capture socket handshakes...</div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="mt-3 text-[10px] text-slate-500 flex justify-between items-center border-t border-slate-800/80 pt-2">
+                            <span>Filter: TCP Sockets (AF_INET)</span>
+                            <span>Buffer: 64KB Recv</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- 4-Step Engineering Case Study Breakdown -->
+        <section class="space-y-8">
+            <div class="text-center max-w-3xl mx-auto space-y-2">
+                <span class="text-xs font-mono text-cyan-400 uppercase tracking-widest">// ARCHITECTURE BLUEPRINT</span>
+                <h2 class="text-3xl font-display font-black text-white" data-i18n="stepsTitle">4-Step Engineering Case
+                    Study</h2>
+                <p class="text-xs sm:text-sm text-slate-400" data-i18n="stepsSubtitle">How the project evolved from
+                    standard network reconnaissance to a high-speed executive auditing suite.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Step 1 -->
+                <div
+                    class="bg-cyber-card p-6 rounded-2xl border border-cyber-border hover:border-cyan-500/50 transition-all space-y-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 flex items-center justify-center font-display font-black text-sm">
+                        01</div>
+                    <span class="text-[10px] font-mono uppercase text-cyan-400 tracking-wider block"
+                        data-i18n="step1Label">Step 1: The Challenge</span>
+                    <h3 class="text-lg font-bold text-white" data-i18n="step1Title">Subnet Timeouts &amp; Blindspots
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed" data-i18n="step1Desc">Sequential port probes take
+                        minutes to complete on filtered networks. A dropped packet frequently led to silent scan
+                        hang-ups and incomplete network visibility.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div
+                    class="bg-cyber-card p-6 rounded-2xl border border-cyber-border hover:border-blue-500/50 transition-all space-y-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-blue-950/60 border border-blue-500/40 text-blue-400 flex items-center justify-center font-display font-black text-sm">
+                        02</div>
+                    <span class="text-[10px] font-mono uppercase text-blue-400 tracking-wider block"
+                        data-i18n="step2Label">Step 2: Architecture</span>
+                    <h3 class="text-lg font-bold text-white" data-i18n="step2Title">Concurrent Socket Pools</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed" data-i18n="step2Desc">Implemented Python's
+                        ThreadPoolExecutor to spawn up to 200 non-blocking worker threads. TCP handshakes across full
+                        port spaces complete concurrently in under 2 seconds.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div
+                    class="bg-cyber-card p-6 rounded-2xl border border-cyber-border hover:border-emerald-500/50 transition-all space-y-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-display font-black text-sm">
+                        03</div>
+                    <span class="text-[10px] font-mono uppercase text-emerald-400 tracking-wider block"
+                        data-i18n="step3Label">Step 3: Implementation</span>
+                    <h3 class="text-lg font-bold text-white" data-i18n="step3Title">Origin Geolocation &amp; OSINT</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed" data-i18n="step3Desc">Integrated origin country
+                        and ASN company mapping, TTL OS fingerprinting, IIS Windows Server release deduction, and
+                        extracted web contacts.</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div
+                    class="bg-cyber-card p-6 rounded-2xl border border-cyber-border hover:border-indigo-500/50 transition-all space-y-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-indigo-950/60 border border-indigo-500/40 text-indigo-400 flex items-center justify-center font-display font-black text-sm">
+                        04</div>
+                    <span class="text-[10px] font-mono uppercase text-indigo-400 tracking-wider block"
+                        data-i18n="step4Label">Step 4: Deployment</span>
+                    <h3 class="text-lg font-bold text-white" data-i18n="step4Title">Binary Packaging &amp; Reports</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed" data-i18n="step4Desc">Compiled via PyInstaller
+                        into standalone zero-dependency executables for Linux CLI and Windows. The auditor automatically
+                        writes an executive dark-mode HTML report.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CVE Knowledge Base & Defensive Posture Matrix -->
+        <section class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                    <span class="text-xs font-mono text-cyan-400 uppercase tracking-widest">// DEFENSIVE BASELINE</span>
+                    <h2 class="text-2xl sm:text-3xl font-display font-black text-white" data-i18n="matrixTitle">CVE
+                        &amp; Perimeter Risk Knowledge Base</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="filterMatrix('all', this)"
+                        class="matrix-filter px-3 py-1 rounded-lg text-xs font-mono font-bold bg-cyan-400 text-black">ALL
+                        VECTORS</button>
+                    <button onclick="filterMatrix('CRITICAL', this)"
+                        class="matrix-filter px-3 py-1 rounded-lg text-xs font-mono font-bold bg-slate-800 text-slate-400 hover:text-white">CRITICAL</button>
+                    <button onclick="filterMatrix('HIGH', this)"
+                        class="matrix-filter px-3 py-1 rounded-lg text-xs font-mono font-bold bg-slate-800 text-slate-400 hover:text-white">HIGH</button>
+                </div>
+            </div>
+
+            <div class="bg-cyber-card rounded-2xl border border-cyber-border overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead
+                            class="bg-slate-900/90 text-slate-400 border-b border-cyber-border uppercase text-[11px]">
+                            <tr>
+                                <th class="p-4">Severity</th>
+                                <th class="p-4">Vector / Port</th>
+                                <th class="p-4">CVE / Signature</th>
+                                <th class="p-4">CVSS Eq.</th>
+                                <th class="p-4">Remediation Guidance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrixTableBody" class="divide-y divide-cyber-border/60 text-slate-300">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 40-Second Video Demo & Speech Walkthrough -->
+        <section
+            class="bg-gradient-to-r from-cyan-950/40 via-cyber-card to-indigo-950/40 p-8 rounded-3xl border border-cyan-500/30 flex flex-col lg:flex-row items-center gap-8 shadow-2xl">
+            <div class="w-full lg:w-1/2 space-y-4">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-400 text-xs font-mono uppercase">
+                    <i class="fa-solid fa-video"></i> <span>40-Second Video Showcase</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-display font-black text-white" data-i18n="videoTitle">Watch the
+                    Auditor in Production</h2>
+                <p class="text-xs sm:text-sm text-slate-400 leading-relaxed font-sans" data-i18n="videoDesc">
+                    Recorded live inside the Fekra Tech Academy security lab. Watch the multi-threaded scanner tear
+                    through local subnets, perform instant banner grabbing, trace server origins, and compile an
+                    executive defense scorecard.
+                </p>
+
+                <!-- Voiceover Controller & WhatsApp Direct Enrollment -->
+                <div class="pt-2 flex flex-wrap items-center gap-3">
+                    <button id="voiceoverBtn" onclick="toggleVoiceover()"
+                        class="px-5 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-display font-bold text-xs uppercase tracking-wider transition flex items-center gap-2 shadow-lg shadow-cyan-500/20">
+                        <i id="voiceoverIcon" class="fa-solid fa-microphone-lines"></i>
+                        <span id="voiceoverLabel" data-i18n="voiceoverPlay">Play AI Voiceover Walkthrough</span>
+                    </button>
+                    <a href="https://wa.me/201099995519?text=Hello%20Fekra%20Tech,%20I%20saw%20Ziad%27s%20Network%20Recon%20Auditor%20project%20and%20want%20to%20enroll%20in%20Cybersecurity!"
+                        target="_blank"
+                        class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 transition">
+                        <i class="fa-brands fa-whatsapp text-sm"></i> <span data-i18n="enrollWA">Enroll in Cybersecurity
+                            Track</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Video Player Frame -->
+            <div
+                class="w-full lg:w-1/2 rounded-2xl overflow-hidden bg-black border border-cyan-500/40 relative aspect-video shadow-2xl">
+                <video id="demoVideo" controls muted loop playsinline class="w-full h-full object-cover">
+                    <source src="./recon-tool-demo.mp4" type="video/mp4">
+                    Your browser does not support HTML5 video.
+                </video>
+                <div
+                    class="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-mono text-white flex items-center gap-2 border border-slate-700 pointer-events-none">
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    <span>40-SEC LIVE DEMO</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="border-t border-cyber-border/80 bg-slate-950 py-10 px-4 mt-20 text-slate-500 text-xs font-mono">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <div>
+                    <span class="text-slate-300 font-bold block">Fekra Tech Academy</span>
+                    <span>Applied Cybersecurity &amp; Systems Engineering</span>
+                </div>
+            </div>
+
+            <p>&copy; 2026 Fekra Tech Academy. Student Project Showcase • Engineered by Ziad A.</p>
+
+            <div class="flex items-center gap-4 text-base">
+                <a href="https://github.com/SD3bes" target="_blank" class="hover:text-cyan-400 transition"
+                    aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                <a href="https://wa.me/201099995519" target="_blank" class="hover:text-emerald-400 transition"
+                    aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                <a href="https://fekra-tech-acad.vercel.app/" target="_blank" class="hover:text-cyan-400 transition"
+                    aria-label="Website"><i class="fa-solid fa-globe"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Application Logic & Sound Engine -->
+    <script>
+        let currentLang = 'en';
+        let isMuted = false;
+        let isVoiceoverActive = false;
+        let scanInProgress = false;
+
+        // Web Audio Synthesizer
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep(freq = 600, duration = 0.05, type = 'sine') {
+            if (isMuted) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) { }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById('muteIcon').className = isMuted ? "fa-solid fa-volume-xmark text-slate-500" : "fa-solid fa-volume-high text-emerald-400";
+            document.getElementById('muteLabel').textContent = isMuted ? "MUTED" : "AUDIO ON";
+        }
+
+        function toggleCRT() {
+            document.body.classList.toggle('crt-grid');
+        }
+
+        // Bilingual Copy Matrix
+        const i18n = {
+            en: {
+                backBtn: "Academy Portfolio",
+                heroBadge: "Phase 3 Cybersecurity Capstone • Automated Perimeter Auditor",
+                heroDesc: "A multi-threaded Python defensive intelligence suite. Engineered with 150-socket parallel thread pools, geographic origin mapping, passive ICMP TTL OS fingerprinting, Windows Server IIS deduction, and CVSS threat exposure grading.",
+                simTag: "// SOC TELEMETRY & RECON WORKBENCH",
+                simTitle: "Live Perimeter Audit Environment",
+                presetLabel: "Select Infrastructure Target:",
+                cardOrigin: "Origin Country",
+                cardOs: "Detected Platform",
+                cardRisk: "Threat Exposure",
+                cardSpeed: "Socket Concurrency",
+                runBtn: "Run Full Recon",
+                exportBtn: "Export HTML",
+                stepsTitle: "4-Step Engineering Case Study",
+                stepsSubtitle: "How the project evolved from standard network reconnaissance to a high-speed executive auditing suite.",
+                step1Label: "Step 1: The Challenge",
+                step1Title: "Subnet Timeouts & Blindspots",
+                step1Desc: "Sequential port probes take minutes to complete on filtered networks. A dropped packet frequently led to silent scan hang-ups and incomplete network visibility.",
+                step2Label: "Step 2: Architecture",
+                step2Title: "Concurrent Socket Pools",
+                step2Desc: "Implemented Python's ThreadPoolExecutor to spawn up to 200 non-blocking worker threads. TCP handshakes across full port spaces complete concurrently in under 2 seconds.",
+                step3Label: "Step 3: Implementation",
+                step3Title: "Origin Geolocation & OSINT",
+                step3Desc: "Integrated origin country and ASN company mapping, TTL OS fingerprinting, IIS Windows Server release deduction, and extracted web contacts.",
+                step4Label: "Step 4: Deployment",
+                step4Title: "Binary Packaging & Reports",
+                step4Desc: "Compiled via PyInstaller into standalone zero-dependency executables for Linux CLI and Windows. The auditor automatically writes an executive dark-mode HTML report.",
+                matrixTitle: "CVE & Perimeter Risk Knowledge Base",
+                videoTitle: "Watch the Auditor in Production",
+                videoDesc: "Recorded live inside the Fekra Tech Academy security lab. Watch the multi-threaded scanner tear through local subnets, perform instant banner grabbing, trace server origins, and compile an executive defense scorecard.",
+                voiceoverPlay: "Play AI Voiceover Walkthrough",
+                voiceoverStop: "Stop Voiceover",
+                enrollWA: "Enroll in Cybersecurity Track"
+            },
+            ar: {
+                backBtn: "معرض مشاريع الأكاديمية",
+                heroBadge: "مشروع تخرج الأمن السيبراني • المرحلة الثالثة",
+                heroDesc: "أداة فحص واكتشاف ثغرات متطورة بلغة بايثون. تجمع بين المعالجة المتزامنة فائقة السرعة (+150 خيط معالجة)، وتحديد بلد المنشأ والشركة المشغلة، وبصمة نظام التشغيل عبر ICMP TTL، وإصدارات ويندوز عبر IIS، وتقييم المخاطر.",
+                simTag: "// منصة استخبارات وفحص التهديدات",
+                simTitle: "بيئة الفحص والتتبع الحي للأنظمة",
+                presetLabel: "اختر بيئة الهدف المستهدف:",
+                cardOrigin: "بلد وسيرفر الاستضافة",
+                cardOs: "نظام التشغيل المقدر",
+                cardRisk: "مؤشر التعرض للخطر",
+                cardSpeed: "سرعة المعالجة المتزامنة",
+                runBtn: "بدء الفحص الشامل",
+                exportBtn: "تصدير التقرير HTML",
+                stepsTitle: "خطوات التنفيذ الهندسي للمشروع (4 مراحل)",
+                stepsSubtitle: "كيف تطور المشروع من أداة فحص بسيطة إلى منصة فحص متزامنة ومتقدمة بمؤشرات قياس رسمية.",
+                step1Label: "الخطوة الأولى: التحدي",
+                step1Title: "بطء الفحص والخدمات غير المرئية",
+                step1Desc: "الفحص التقليدي المتتالي يستغرق وقتاً طويلاً جداً ويتوقف عند حزم الفايروول مما يترك أجهزة غير مكتشفة.",
+                step2Label: "الخطوة الثانية: الهيكلية",
+                step2Title: "مجموعات المعالجة المتزامنة",
+                step2Desc: "استخدام ThreadPoolExecutor لتشغيل حتى 200 خيط معالجة وفحص مئات المنافذ في أقل من ثانيتين دون بطء.",
+                step3Label: "الخطوة الثالثة: التنفيذ",
+                step3Title: "تحديد الدولة وبيانات OSINT",
+                step3Desc: "استخراج الدولة والشركة المستضيفة و ASN، وحساب TTL لتحديد نظام التشغيل، واستخراج إصدار ويندوز بدقة عبر IIS.",
+                step4Label: "الخطوة الرابعة: النشر",
+                step4Title: "تصدير البرنامج والتقارير التنفيذية",
+                step4Desc: "تحويل كود بايثون لبرنامج مستقل (.exe) يعمل دون الحاجة لتثبيت بايثون، مع تصدير تقرير HTML داكن واحترافي.",
+                matrixTitle: "قاعدة معرفة الثغرات ومخاطر المنافذ",
+                videoTitle: "شاهد الأداة قيد التشغيل الفعلي",
+                videoDesc: "تم تسجيل الفيديو داخل معمل الأمن السيبراني بأكاديمية فكرة تك. شاهد فحص الشبكة واستخراج البيانات وتقرير الأمان خلال ثوانٍ.",
+                voiceoverPlay: "تشغيل التعليق الصوتي للمشروع",
+                voiceoverStop: "إيقاف التعليق الصوتي",
+                enrollWA: "سجل في مسار الأمن السيبراني"
+            }
+        };
+
+        function toggleLang() {
+            stopVoiceover();
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+            document.getElementById('langText').textContent = currentLang === 'ar' ? 'EN' : 'عربي';
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang] && i18n[currentLang][key]) {
+                    el.textContent = i18n[currentLang][key];
+                }
+            });
+        }
+
+        // Extended Target Presets with Lat/Long and Network ASN details
+        const TARGET_PRESETS = {
+            corp: {
+                host: "corp.gateway.internal",
+                ip: "192.168.10.45",
+                country: "Egypt [EG]",
+                city: "Cairo, New Cairo",
+                coords: "30.0444° N, 31.2357° E",
+                org: "Telecom Egypt Enterprise",
+                asn: "AS8452 TE-AS",
+                isp: "Telecom Egypt Data",
+                rtt: "14 ms (Regional Edge)",
+                ttl: 128,
+                os: "Microsoft Windows Server 2022 (IIS/10.0)",
+                webServer: "Microsoft-IIS/10.0",
+                framework: "ASP.NET Core 8.0",
+                emails: ["admin@corp-gateway.internal", "soc@corp-gateway.internal"],
+                phones: ["+20 100 234 5678", "+20 2 2795 0000"],
+                ports: [
+                    { port: 80, banner: "HTTP/1.1 Microsoft-IIS/10.0" },
+                    { port: 443, banner: "TLSv1.3 OpenSSL/3.0.7 Cipher: AES-256-GCM" },
+                    { port: 445, banner: "Direct-SMB Windows 10/Server Enterprise" },
+                    { port: 3389, banner: "MS-RDP Terminal Services (NLA Enforced)" }
+                ],
+                cves: [
+                    { sev: "CRITICAL", port: 445, title: "Exposed Direct SMB Service", cvss: 9.8, fix: "Block TCP 445 at edge firewalls to mitigate wormable relay abuse." },
+                    { sev: "HIGH", port: 3389, title: "Exposed RDP Port 3389", cvss: 7.0, fix: "Enforce perimeter VPN tunnels with MFA authentication." },
+                    { sev: "MEDIUM", port: 80, title: "Missing HSTS Header", cvss: 4.0, fix: "Inject Strict-Transport-Security policy on all web roots." }
+                ],
+                packets: [
+                    "TCP SYN > 192.168.10.45:445 [Seq=0 Win=64240]",
+                    "TCP SYN/ACK < 192.168.10.45:445 [Seq=0 Ack=1 Win=65535]",
+                    "TCP ACK > 192.168.10.45:445 [Handshake Completed]",
+                    "NETBIOS-SSN Session Request sent [Length=72 bytes]",
+                    "SMB2 Negotiate Protocol Request > Dialect: SMB 2.1/3.0"
+                ],
+                riskScore: 52.8,
+                grade: "C (Moderate Exposure)",
+                time: "0.84s"
+            },
+            cloud: {
+                host: "api.cloud-linux.app",
+                ip: "104.21.68.99",
+                country: "United States [US]",
+                city: "San Francisco, California",
+                coords: "37.7749° N, 122.4194° W",
+                org: "Cloudflare, Inc.",
+                asn: "AS13335 CLOUDFLARENET",
+                isp: "Cloudflare CDN Edge",
+                rtt: "48 ms (Transatlantic)",
+                ttl: 64,
+                os: "Linux / Ubuntu 22.04 LTS (Kernel 5.15)",
+                webServer: "nginx/1.24.0",
+                framework: "Next.js / Node.js Engine",
+                emails: ["devops@cloud-linux.app"],
+                phones: ["+1 (415) 555-0199"],
+                ports: [
+                    { port: 22, banner: "OpenSSH_8.9p1 Ubuntu-3ubuntu0.4" },
+                    { port: 80, banner: "HTTP/1.1 301 Moved Permanently (HTTPS Enforced)" },
+                    { port: 443, banner: "TLSv1.3 TLS_AES_256_GCM_SHA384" }
+                ],
+                cves: [
+                    { sev: "LOW", port: 22, title: "SSH Software Version Disclosed", cvss: 2.5, fix: "Configure Debian banner suppression in sshd_config." }
+                ],
+                packets: [
+                    "TCP SYN > 104.21.68.99:443 [Seq=0 Win=65535]",
+                    "TCP SYN/ACK < 104.21.68.99:443 [Seq=0 Ack=1 Win=65535]",
+                    "TLS Client Hello > SNI: api.cloud-linux.app",
+                    "TLS Server Hello < Cipher: TLS_AES_256_GCM_SHA384",
+                    "Certificate Verified: Issued by Cloudflare Inc ECC CA-3"
+                ],
+                riskScore: 12.5,
+                grade: "A- (Hardened)",
+                time: "0.42s"
+            },
+            legacy: {
+                host: "vault.legacy-bank.corp",
+                ip: "172.16.0.12",
+                country: "United Kingdom [GB]",
+                city: "London, England",
+                coords: "51.5074° N, 0.1278° W",
+                org: "Legacy Financial Trust PLC",
+                asn: "AS2856 BT-Central-Plus",
+                isp: "British Telecom Dedicated",
+                rtt: "72 ms (Cross-Border Route)",
+                ttl: 128,
+                os: "Windows Server 2003 (Legacy End-of-Life)",
+                webServer: "Microsoft-IIS/6.0",
+                framework: "Classic ASP",
+                emails: ["sysadmin@legacy-bank.corp", "finance@legacy-bank.corp"],
+                phones: ["+44 20 7946 0123"],
+                ports: [
+                    { port: 21, banner: "Microsoft FTP Service (220 Service ready)" },
+                    { port: 23, banner: "Telnet Service Microsoft Windows NT" },
+                    { port: 80, banner: "Microsoft-IIS/6.0 WebDAV Enabled" },
+                    { port: 135, banner: "epmapper Microsoft Windows RPC" },
+                    { port: 445, banner: "Windows Server 2003 SMBv1" }
+                ],
+                cves: [
+                    { sev: "CRITICAL", port: 80, title: "CVE-2017-7269 (IIS 6.0 WebDAV Overflow)", cvss: 9.8, fix: "Decommission host immediately; upgrade to supported OS." },
+                    { sev: "CRITICAL", port: 445, title: "SMBv1 Active (MS17-010 EternalBlue Exposure)", cvss: 9.8, fix: "Disable SMBv1 dialect and segment off corporate LAN." },
+                    { sev: "HIGH", port: 23, title: "Cleartext Telnet Administration", cvss: 7.8, fix: "Disable Telnet and enforce SSHv2." }
+                ],
+                packets: [
+                    "TCP SYN > 172.16.0.12:23 [Seq=0 Win=64240]",
+                    "TCP SYN/ACK < 172.16.0.12:23 [Seq=0 Ack=1 Win=16384]",
+                    "TELNET Option DO SUPPRESS GO AHEAD [Telnet Handshake]",
+                    "TCP SYN > 172.16.0.12:80 [Seq=0 Win=64240]",
+                    "PROPFIND / HTTP/1.1 WebDAV request > Returns 207 Multi-Status"
+                ],
+                riskScore: 94.2,
+                grade: "F (Critical Vulnerabilities Found)",
+                time: "1.12s"
+            }
+        };
+
+        let activePreset = TARGET_PRESETS.corp;
+
+        function selectPreset(key) {
+            if (scanInProgress) return;
+            activePreset = TARGET_PRESETS[key];
+            document.getElementById('customTargetInput').value = activePreset.host;
+            document.getElementById('termTargetLabel').textContent = activePreset.host;
+
+            ['presetCorp', 'presetCloud', 'presetLegacy'].forEach(id => {
+                document.getElementById(id).className = "text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-400 hover:text-white";
+            });
+            const activeBtnId = key === 'corp' ? 'presetCorp' : key === 'cloud' ? 'presetCloud' : 'presetLegacy';
+            document.getElementById(activeBtnId).className = "text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-cyan-500/60 bg-cyan-950/60 text-cyan-300";
+
+            // Update radar & side telemetry
+            document.getElementById('radarCoord').textContent = activePreset.coords;
+            document.getElementById('sideAsnVal').textContent = activePreset.asn;
+            document.getElementById('sideIspVal').textContent = activePreset.isp;
+            document.getElementById('sideRttVal').textContent = activePreset.rtt;
+
+            playBeep(800, 0.04);
+        }
+
+        function clearTerminal() {
+            document.getElementById('terminalScreen').innerHTML = '<div class="text-slate-500">// Terminal cleared. Select preset or enter host.</div>';
+            document.getElementById('packetStreamBox').innerHTML = '<div class="text-slate-500">// Ready to capture socket handshakes...</div>';
+            playBeep(400, 0.03);
+        }
+
+        function printTermLine(text, colorClass = "text-slate-300", delay = 100) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const screen = document.getElementById('terminalScreen');
+                    const div = document.createElement('div');
+                    div.className = colorClass;
+                    div.innerHTML = text;
+                    screen.appendChild(div);
+                    screen.scrollTop = screen.scrollHeight;
+                    playBeep(1200, 0.015, 'triangle');
+                    resolve();
+                }, delay);
+            });
+        }
+
+        function appendPacketLine(packetText, delay = 120) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const box = document.getElementById('packetStreamBox');
+                    const item = document.createElement('div');
+                    item.className = "text-cyan-300 border-l-2 border-cyan-500/60 pl-2 font-mono text-[10px]";
+                    item.textContent = packetText;
+                    box.appendChild(item);
+                    box.scrollTop = box.scrollHeight;
+                    playBeep(1800, 0.01, 'sine');
+                    resolve();
+                }, delay);
+            });
+        }
+
+        async function executeScan() {
+            if (scanInProgress) return;
+            scanInProgress = true;
+            const btn = document.getElementById('startScanBtn');
+            const statusInd = document.getElementById('scanStatusIndicator');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            statusInd.innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping inline-block"></span> AUDITING...';
+
+            const target = document.getElementById('customTargetInput').value || activePreset.host;
+            clearTerminal();
+
+            await printTermLine(`[*] Initiating Audit Session against target: <strong class="text-white">${target}</strong>...`, "text-cyan-400 font-bold", 120);
+            await printTermLine(`[*] Allocating ThreadPoolExecutor (max_workers=150)...`, "text-slate-400", 150);
+
+            // Packet Stream Preview
+            const pbox = document.getElementById('packetStreamBox');
+            pbox.innerHTML = '';
+
+            // STAGE 1: Target Resolution, Geolocation & Origin Country
+            await printTermLine(`\n<span class="text-fuchsia-400 font-bold">[*] STAGE 1: Target Resolution, Origin Country & Geolocation</span>`, "text-fuchsia-400", 200);
+            await printTermLine(`    ▸ Resolved IPv4     : <span class="text-cyan-300 font-mono">${activePreset.ip}</span>`, "text-slate-300", 120);
+            await printTermLine(`    ▸ Host Country      : <span class="text-emerald-400 font-bold">${activePreset.country}</span>`, "text-slate-300", 130);
+            await printTermLine(`    ▸ Geographic City   : <span class="text-cyan-300">${activePreset.city}</span>`, "text-slate-300", 110);
+            await printTermLine(`    ▸ Operating Entity  : <span class="text-amber-300 font-bold">${activePreset.org}</span>`, "text-slate-300", 130);
+            await printTermLine(`    ▸ Network ASN & ISP : <span class="text-slate-300">${activePreset.asn} (${activePreset.isp})</span>`, "text-slate-300", 120);
+            await printTermLine(`    ▸ ICMP TTL Analysis : Observed TTL=${activePreset.ttl} ➔ <span class="text-amber-300 font-bold">${activePreset.os}</span>`, "text-slate-300", 180);
+
+            // STAGE 2: Web Server & OSINT Extractor
+            await printTermLine(`\n<span class="text-fuchsia-400 font-bold">[*] STAGE 2: Web Intelligence, Contact OSINT & Windows Audit</span>`, "text-fuchsia-400", 180);
+            await printTermLine(`    ▸ Web Server Banner : <span class="text-amber-300">${activePreset.webServer}</span>`, "text-slate-300", 120);
+            await printTermLine(`    ▸ Backend Framework : <span class="text-cyan-300">${activePreset.framework}</span>`, "text-slate-300", 120);
+            await printTermLine(`    [+] Harvested Emails: <span class="text-cyan-400">${activePreset.emails.join(', ')}</span>`, "text-emerald-400", 150);
+            await printTermLine(`    [+] Carrier / Phones: <span class="text-cyan-400">${activePreset.phones.join(', ')}</span>`, "text-emerald-400", 150);
+// STAGE 3: Multi-Threaded Port Scan with Packet Dissection
+      await printTermLine(`\n<span class="text-fuchsia-400 font-bold">[*] STAGE 3: Multi-Threaded Port Scan (Concurrent Sockets Active)</span>`, "text-fuchsia-400", 200);
+      for (let i = 0; i < activePreset.ports.length; i++) {
+        const p = activePreset.ports[i];
+        if (activePreset.packets[i]) {
+          await appendPacketLine(activePreset.packets[i], 100);
+        }
+        const portPadded = String(p.port).padEnd(5, ' ');
+        await printTermLine(`    <span class="text-emerald-400 font-bold">[+] PORT ${portPadded} OPEN</span> │ <span class="text-amber-300">${p.banner}</span>`, "text-slate-300", 150);
+      }
+      await printTermLine(`    [*] Finished port scan sweep in ${activePreset.time}. Found ${activePreset.ports.length} listening services.`, "text-cyan-400", 120);
+
+      // STAGE 4: Automated Risk Flags & CVE Correlation
+      await printTermLine(`\n<span class="text-fuchsia-400 font-bold">[*] STAGE 4: Threat Posture & Risk Scoring Engine</span>`, "text-fuchsia-400", 160);
+      for (const cve of activePreset.cves) {
+        const col = cve.sev === 'CRITICAL' ? 'text-red-400' : cve.sev === 'HIGH' ? 'text-orange-400' : 'text-amber-300';
+        await printTermLine(`    [<span class="${col} font-bold">${cve.sev}</span>] ${cve.title} [CVSS: ${cve.cvss}]`, "text-slate-200", 160);
+        await printTermLine(`             ↳ Remediation: <span class="text-slate-400">${cve.fix}</span>`, "text-slate-400", 100);
+      }
+
+      await printTermLine(`\n<span class="text-cyan-300 font-bold">===============================================================</span>`, "text-cyan-300", 80);
+      await printTermLine(`Host Origin Country   : <strong class="text-emerald-400">${activePreset.country}</strong>`, "text-white font-bold", 100);
+      await printTermLine(`Operating Entity      : <strong class="text-amber-300">${activePreset.org}</strong>`, "text-white font-bold", 100);
+      await printTermLine(`Threat Exposure Index : <strong class="text-amber-400">${activePreset.riskScore} / 100</strong>`, "text-white font-bold", 100);
+      await printTermLine(`Defensive Posture     : <strong class="text-white">${activePreset.grade}</strong>`, "text-white font-bold", 100);
+      await printTermLine(`Audit Complete. Standalone report ready for export.`, "text-emerald-400 font-bold", 80);
+
+      // Update Top Telemetry Cards
+      document.getElementById('metricOriginVal').textContent = activePreset.country;
+      document.getElementById('metricOrgVal').textContent = activePreset.org;
+      document.getElementById('metricOsVal').textContent = activePreset.os.split(' ')[0] + " " + activePreset.os.split(' ')[1];
+      document.getElementById('metricRiskVal').textContent = `${activePreset.riskScore} / 100`;
+      document.getElementById('metricGradeVal').textContent = `Grade: ${activePreset.grade}`;
+      document.getElementById('metricTimeVal').textContent = activePreset.time;
+
+      playBeep(900, 0.2, 'square');
+      statusInd.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> AUDIT COMPLETE';
+      btn.disabled = false;
+      btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      scanInProgress = false;
+    }
+
+    // CVE Knowledge Base
+    const MATRIX_DATA = [
+      { sev: "CRITICAL", vector: "TCP 445 (SMB)", cve: "MS17-010 / Wormable", cvss: 9.8, fix: "Block TCP 445 at edge boundaries; disable SMBv1 dialect immediately." },
+      { sev: "CRITICAL", vector: "TCP 80 (IIS 6.0)", cve: "CVE-2017-7269 WebDAV", cvss: 9.8, fix: "Decommission legacy Windows Server 2003 machine; migrate workload." },
+      { sev: "CRITICAL", vector: "HTTP (Apache 2.4.49)", cve: "CVE-2021-41773 RCE", cvss: 9.8, fix: "Upgrade Apache HTTPD to version 2.4.51 or higher immediately." },
+      { sev: "HIGH", vector: "TCP 23 (Telnet)", cve: "Cleartext Protocol", cvss: 7.8, fix: "Disable unencrypted remote administration; replace with SSHv2 keys." },
+      { sev: "HIGH", vector: "TCP 3389 (RDP)", cve: "Exposed Perimeter Desktop", cvss: 7.0, fix: "Enforce network-level authentication (NLA), VPN, and multi-factor auth." },
+      { sev: "HIGH", vector: "HTTP (/.env / Git)", cve: "Exposed Secrets & Source", cvss: 8.5, fix: "Deny access to hidden dotfiles (.git, .env) in Nginx/Apache configuration." },
+      { sev: "MEDIUM", vector: "TCP 21 (FTP)", cve: "Cleartext Credentials", cvss: 5.5, fix: "Mandate TLS encryption using FTPS or transition users to SFTP." },
+      { sev: "MEDIUM", vector: "HTTP Headers", cve: "Missing Strict-Transport-Security", cvss: 4.0, fix: "Inject Strict-Transport-Security: max-age=31536000; includeSubDomains header." }
+    ];
+
+    function renderMatrix(filter = 'all') {
+      const tbody = document.getElementById('matrixTableBody');
+      tbody.innerHTML = '';
+      MATRIX_DATA.forEach(row => {
+        if (filter !== 'all' && row.sev !== filter) return;
+        const badgeCol = row.sev === 'CRITICAL' ? 'bg-red-500/20 text-red-400 border-red-500/40' :
+                         row.sev === 'HIGH' ? 'bg-orange-500/20 text-orange-400 border-orange-500/40' :
+                         'bg-amber-500/20 text-amber-300 border-amber-500/40';
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-900/60 transition";
+        tr.innerHTML = `
+          <td class="p-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeCol}">${row.sev}</span></td>
+          <td class="p-4 font-bold text-white">${row.vector}</td>
+          <td class="p-4 text-cyan-300">${row.cve}</td>
+          <td class="p-4"><span class="text-white font-bold bg-slate-800 px-2 py-0.5 rounded">${row.cvss}</span></td>
+          <td class="p-4 text-slate-400">${row.fix}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterMatrix(category, btn) {
+      document.querySelectorAll('.matrix-filter').forEach(b => {
+        b.className = "matrix-filter px-3 py-1 rounded-lg text-xs font-mono font-bold bg-slate-800 text-slate-400 hover:text-white";
+      });
+      btn.className = "matrix-filter px-3 py-1 rounded-lg text-xs font-mono font-bold bg-cyan-400 text-black";
+      renderMatrix(category);
+      playBeep(700, 0.03);
+    }
+
+    // Client-side Executive HTML Report Export
+    function downloadReport() {
+      const target = activePreset.host;
+      const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Security Audit Assessment - ${target}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #030611; color: #f8fafc; margin: 0; padding: 40px; }
+    .container { max-width: 900px; margin: 0 auto; background: #0a101f; padding: 30px; border-radius: 12px; border: 1px solid #1e293b; }
+    h1 { color: #00f2fe; margin-top: 0; }
+    .geo-box { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 15px; margin-bottom: 20px; font-size: 13px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .score-card { display: flex; gap: 20px; margin: 25px 0; }
+    .card { flex: 1; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 8px; text-align: center; }
+    .card h3 { font-size: 11px; color: #94a3b8; text-transform: uppercase; margin: 0; }
+    .card .val { font-size: 26px; font-weight: bold; color: #38bdf8; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #1e293b; }
+    th { background: #020617; color: #94a3b8; }
+    .badge { padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+    .crit { background: #ef4444; color: white; }
+    .high { background: #f97316; color: white; }
+    .med { background: #eab308; color: black; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Perimeter Security & Reconnaissance Report</h1>
+    <p style="color:#94a3b8;">Target: <strong>${target}</strong> (${activePreset.ip}) | Timestamp: ${new Date().toISOString()}</p>
+    
+    <div class="geo-box">
+      <div><strong>Host Country:</strong> ${activePreset.country}</div>
+      <div><strong>Geographic City:</strong> ${activePreset.city}</div>
+      <div><strong>Operating Enterprise:</strong> ${activePreset.org}</div>
+      <div><strong>Autonomous System (ASN):</strong> ${activePreset.asn}</div>
+    </div>
+
+    <div class="score-card">
+      <div class="card"><h3>Threat Exposure Index</h3><div class="val">${activePreset.riskScore} / 100</div></div>
+      <div class="card"><h3>Defensive Grade</h3><div class="val">${activePreset.grade}</div></div>
+      <div class="card"><h3>Estimated Platform</h3><div class="val" style="font-size:16px; margin-top:14px;">${activePreset.os}</div></div>
+    </div>
+    
+    <h2>Flagged Vulnerabilities & Remediation</h2>
+    <table>
+      <thead><tr><th>Severity</th><th>Issue / Finding</th><th>CVSS</th><th>Remediation Guidance</th></tr></thead>
+      <tbody>
+        ${activePreset.cves.map(c => `<tr><td><span class="badge ${c.sev === 'CRITICAL' ? 'crit' : c.sev === 'HIGH' ? 'high' : 'med'}">${c.sev}</span></td><td><strong>${c.title}</strong></td><td><code>${c.cvss}</code></td><td>${c.fix}</td></tr>`).join('')}
+      </tbody>
+    </table>
+    
+    <h2 style="margin-top:30px;">Discovered Services</h2>
+    <table>
+      <thead><tr><th>Port</th><th>Banner Information</th></tr></thead>
+      <tbody>${activePreset.ports.map(p => `<tr><td><strong>TCP ${p.port}</strong></td><td><code>${p.banner}</code></td></tr>`).join('')}</tbody>
+    </table>
+    
+    <p style="margin-top:40px; color:#64748b; font-size:11px;">Generated by ReconAuditor v6.0 • Fekra Tech Academy Cybersecurity Engineering</p>
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ReconAuditor_Report_${target}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      playBeep(1000, 0.1);
+    }
+
+    // Web Speech API Voiceover Engine
+    function toggleVoiceover() {
+      if (isVoiceoverActive) {
+        stopVoiceover();
+      } else {
+        startVoiceover();
+      }
+    }
+
+    function startVoiceover() {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+
+      const text = currentLang === 'ar'
+        ? "أهلاً بكم في مشروع أداة فحص واكتشاف ثغرات الشبكات والمنافذ المتطورة، تنفيذ الطالب زياد ع. من أكاديمية فكرة تك. تجمع الأداة بين الفحص البرمجي المتزامن، استخراج البانر والبريد الإلكتروني، وتحديد أنظمة التشغيل والدولة وتقييم المخاطر السيبرانية تلقائياً."
+        : "Welcome to the Multi-Threaded Network Recon and Port Auditor, engineered by Ziad A. at Fekra Tech Academy. This suite combines high-concurrency socket pools, server origin and ASN mapping, passive operating system detection, web contact harvesting, and automated risk scoring with zero third-party latency.";
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = currentLang === 'ar' ? 'ar-EG' : 'en-US';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      utterance.onend = stopVoiceover;
+      utterance.onerror = stopVoiceover;
+
+      window.speechSynthesis.speak(utterance);
+      isVoiceoverActive = true;
+      document.getElementById('voiceoverIcon').className = "fa-solid fa-stop text-red-400";
+      document.getElementById('voiceoverLabel').textContent = i18n[currentLang].voiceoverStop;
+    }
+
+    function stopVoiceover() {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      isVoiceoverActive = false;
+      document.getElementById('voiceoverIcon').className = "fa-solid fa-microphone-lines";
+      document.getElementById('voiceoverLabel').textContent = i18n[currentLang].voiceoverPlay;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderMatrix();
+    });
+  </script>
+</body>
+
+</html>
